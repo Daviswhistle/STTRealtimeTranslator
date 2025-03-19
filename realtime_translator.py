@@ -43,9 +43,53 @@ class RealtimeTranslator:
         self.original_file = f"original_text_{self.timestamp}.txt"
         self.translated_file = f"translated_text_{self.timestamp}.txt"
         
+        # 언어 설정
+        self.languages = {
+            "영어 (미국)": "en-US",
+            "영어 (영국)": "en-GB",
+            "한국어": "ko-KR",
+            "일본어": "ja-JP",
+            "중국어 (간체)": "zh",
+            "중국어 (번체)": "zh-TW",
+            "스페인어": "es-ES",
+            "프랑스어": "fr-FR",
+            "독일어": "de-DE",
+            "러시아어": "ru-RU",
+            "베트남어": "vi-VN",
+            "태국어": "th-TH",
+            "인도네시아어": "id-ID",
+            "힌디어": "hi-IN"
+        }
+        
+        # 언어 코드 매핑 (번역용)
+        self.translate_codes = {
+            "영어 (미국)": "en",
+            "영어 (영국)": "en",
+            "한국어": "ko",
+            "일본어": "ja",
+            "중국어 (간체)": "zh",
+            "중국어 (번체)": "zh-TW",
+            "스페인어": "es",
+            "프랑스어": "fr",
+            "독일어": "de",
+            "러시아어": "ru",
+            "베트남어": "vi",
+            "태국어": "th",
+            "인도네시아어": "id",
+            "힌디어": "hi"
+        }
+        
+        self.selected_source_language = tk.StringVar(value="영어 (미국)")
+        self.selected_target_language = tk.StringVar(value="한국어")
+        
         # UI 구성
         self.setup_ui()
-        
+
+    def update_labels(self, event=None):
+        # 레이블 텍스트 업데이트
+        self.original_label.config(text=f"원본 텍스트 ({self.selected_source_language.get()})")
+        self.translated_label.config(text=f"번역 텍스트 ({self.selected_target_language.get()})")
+    
     def setup_ui(self):
         # 프레임 설정
         main_frame = tk.Frame(self.root, bg="#f0f0f0")
@@ -55,10 +99,44 @@ class RealtimeTranslator:
         control_frame = tk.Frame(main_frame, bg="#f0f0f0")
         control_frame.pack(fill=tk.X, pady=5)
         
+        # 언어 선택 프레임
+        lang_frame = tk.Frame(control_frame, bg="#f0f0f0")
+        lang_frame.pack(side=tk.LEFT, padx=5)
+        
+        # 소스 언어 선택
+        tk.Label(lang_frame, text="입력 언어:", bg="#f0f0f0", font=("Arial", 12)).pack(side=tk.LEFT)
+        self.source_lang_combobox = ttk.Combobox(
+            lang_frame, 
+            textvariable=self.selected_source_language,
+            values=list(self.languages.keys()),
+            state="readonly",
+            width=15,
+            font=("Arial", 11)
+        )
+        self.source_lang_combobox.pack(side=tk.LEFT, padx=5)
+        
+        # 목표 언어 선택
+        tk.Label(lang_frame, text="번역 언어:", bg="#f0f0f0", font=("Arial", 12)).pack(side=tk.LEFT)
+        self.target_lang_combobox = ttk.Combobox(
+            lang_frame, 
+            textvariable=self.selected_target_language,
+            values=list(self.languages.keys()),
+            state="readonly",
+            width=15,
+            font=("Arial", 11)
+        )
+        self.target_lang_combobox.pack(side=tk.LEFT, padx=5)
+        
+        # 콤보박스 이벤트 바인딩
+        self.source_lang_combobox.bind('<<ComboboxSelected>>', self.update_labels)
+        self.target_lang_combobox.bind('<<ComboboxSelected>>', self.update_labels)
+        self.source_lang_combobox.bind('<KeyRelease>', lambda e: self.search_language(e, self.source_lang_combobox))
+        self.target_lang_combobox.bind('<KeyRelease>', lambda e: self.search_language(e, self.target_lang_combobox))
+        
         # 시작/중지 버튼
         self.start_button = tk.Button(control_frame, text="번역 시작", command=self.toggle_recording,
                                      bg="#4CAF50", fg="white", font=("Arial", 12), width=10)
-        self.start_button.pack(side=tk.LEFT, padx=5)
+        self.start_button.pack(side=tk.LEFT, padx=20)
         
         # 상태 표시 레이블
         self.status_label = tk.Label(control_frame, text="대기 중", bg="#f0f0f0", font=("Arial", 12))
@@ -68,17 +146,19 @@ class RealtimeTranslator:
         text_frame = tk.Frame(main_frame, bg="#f0f0f0")
         text_frame.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        # 원본 텍스트 (일본어)
-        original_label = tk.Label(text_frame, text="원본 텍스트 (일본어)", bg="#f0f0f0", font=("Arial", 12, "bold"))
-        original_label.pack(anchor="w")
+        # 원본 텍스트
+        self.original_label = tk.Label(text_frame, text=f"원본 텍스트 ({self.selected_source_language.get()})", 
+                                     bg="#f0f0f0", font=("Arial", 12, "bold"))
+        self.original_label.pack(anchor="w")
         
         self.original_text = scrolledtext.ScrolledText(text_frame, wrap=tk.WORD, height=8, 
                                                      font=("Arial", 12))
         self.original_text.pack(fill=tk.X, expand=False, pady=5)
         
-        # 번역 텍스트 (한국어)
-        translated_label = tk.Label(text_frame, text="번역 텍스트 (한국어)", bg="#f0f0f0", font=("Arial", 12, "bold"))
-        translated_label.pack(anchor="w")
+        # 번역 텍스트
+        self.translated_label = tk.Label(text_frame, text=f"번역 텍스트 ({self.selected_target_language.get()})", 
+                                      bg="#f0f0f0", font=("Arial", 12, "bold"))
+        self.translated_label.pack(anchor="w")
         
         self.translated_text = scrolledtext.ScrolledText(text_frame, wrap=tk.WORD, height=8, 
                                                       font=("Arial", 12))
@@ -144,6 +224,22 @@ class RealtimeTranslator:
             if frames and self.is_recording:  # 녹음이 중지되지 않았다면 큐에 추가
                 self.audio_queue.put(frames)
     
+    def search_language(self, event, combobox):
+        # 현재 입력된 텍스트
+        search_text = combobox.get().lower()
+        
+        # 검색 결과 필터링
+        filtered_languages = [
+            lang for lang in self.languages.keys()
+            if search_text in lang.lower()
+        ]
+        
+        # 콤보박스 업데이트
+        combobox['values'] = filtered_languages
+        
+        # 드롭다운 표시
+        combobox.event_generate('<Down>')
+
     def process_audio(self):
         while self.is_recording or not self.audio_queue.empty():
             try:
@@ -166,7 +262,7 @@ class RealtimeTranslator:
                 config = speech.RecognitionConfig(
                     encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
                     sample_rate_hertz=self.rate,
-                    language_code="ja-JP",  # 일본어
+                    language_code=self.languages[self.selected_source_language.get()],
                     enable_automatic_punctuation=True
                 )
                 
@@ -178,10 +274,13 @@ class RealtimeTranslator:
                     original_text = result.alternatives[0].transcript
                     if original_text.strip():  # 빈 텍스트가 아닌 경우에만 처리
                         # 번역 수행
+                        source_lang = self.translate_codes[self.selected_source_language.get()]
+                        target_lang = self.translate_codes[self.selected_target_language.get()]
+                        
                         translation = self.translate_client.translate(
                             original_text, 
-                            target_language='ko',
-                            source_language='ja'
+                            target_language=target_lang,
+                            source_language=source_lang
                         )
                         
                         translated_text = translation['translatedText']
