@@ -11,7 +11,7 @@ from google.cloud import speech_v1p1beta1 as speech
 from google.cloud import translate_v2 as translate
 
 # 환경 변수 설정 - Google Cloud 인증 파일 경로
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "iconic-valve-433301-q2-cd6882b47aee.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "key.json"
 
 class RealtimeTranslator:
     def __init__(self, root):
