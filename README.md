@@ -17,8 +17,14 @@
    pip install -r requirements.txt
    ```
 
-2. Google Cloud 인증 파일이 프로젝트 폴더에 있는지 확인하세요.
-   - 현재 설정된 인증 파일: `iconic-valve-433301-q2-cd6882b47aee.json`
+2. Google Cloud 서비스 계정 키 설정:
+- Google Cloud Console에서 프로젝트 생성
+- [Speech-to-Text API](https://console.cloud.google.com/apis/library/speech.googleapis.com) 활성화
+- [Cloud Translation API](https://console.cloud.google.com/apis/library/translate.googleapis.com) 활성화
+- 서비스 계정 생성 및 JSON 키 파일 다운로드
+- 다운로드한 JSON 키 파일을 프로젝트 폴더에 저장
+- JSON 파일 이름을 `key.json`으로 변경하거나 
+  realtime_translator.py 파일에서 환경 변수 설정 부분을 수정
 
 ## 사용 방법
 
@@ -37,5 +43,6 @@
 
 ## 주의사항
 
+- Google Cloud 서비스 사용을 위해 결제 계정 등록이 필요할 수 있습니다.
 - 이 프로그램은 컴퓨터의 기본 마이크를 사용합니다. Zoom 세미나의 소리를 인식하려면 컴퓨터 오디오 설정에서 마이크 입력을 스피커 출력으로 설정하거나, 물리적으로 스피커와 마이크를 가깝게 배치하세요.
 - 인터넷 연결이 필요합니다(Google Cloud API 사용).
