@@ -28,8 +28,8 @@ class RealtimeTranslator:
         self.format = pyaudio.paInt16
         self.channels = 1
         self.rate = 16000
-        self.chunk = 1024
-        self.record_seconds = 5  # 5초 단위로 처리
+        self.chunk = 2048  # 버퍼 크기 증가
+        self.record_seconds = 3  # 처리 주기 단축
         
         # 오디오 스트림 및 처리 관련 변수
         self.audio = pyaudio.PyAudio()
@@ -245,18 +245,11 @@ class RealtimeTranslator:
             try:
                 frames = self.audio_queue.get(timeout=1)
                 
-                # WAV 파일로 임시 저장
-                temp_filename = f"temp_{int(time.time())}.wav"
-                wf = wave.open(temp_filename, 'wb')
-                wf.setnchannels(self.channels)
-                wf.setsampwidth(self.audio.get_sample_size(self.format))
-                wf.setframerate(self.rate)
-                wf.writeframes(b''.join(frames))
-                wf.close()
+                # 바이트 데이터로 직접 변환
+                audio_data = b''.join(frames)
                 
                 # 음성 인식 요청 설정
-                with open(temp_filename, 'rb') as audio_file:
-                    content = audio_file.read()
+                content = audio_data
                 
                 audio = speech.RecognitionAudio(content=content)
                 config = speech.RecognitionConfig(
@@ -295,12 +288,6 @@ class RealtimeTranslator:
                         with open(self.translated_file, 'a', encoding='utf-8') as f:
                             f.write(translated_text + '\n')
                 
-                # 임시 파일 삭제
-                try:
-                    os.remove(temp_filename)
-                except:
-                    pass
-                
             except queue.Empty:
                 continue
             except Exception as e:
@@ -309,25 +296,39 @@ class RealtimeTranslator:
     def update_ui(self):
         while self.is_recording or not self.text_queue.empty():
             try:
-                original, translated = self.text_queue.get(timeout=1)
-                
-                # UI 업데이트는 메인 스레드에서 수행
-                self.root.after(0, self.update_text_widgets, original, translated)
-                
+                original, translated = self.text_queue.get(timeout=0.1)
+                if original and translated:  # 유효한 텍스트인 경우에만 처리
+                    # UI 업데이트는 메인 스레드에서 수행
+                    self.root.after(10, self.update_text_widgets, original, translated)
             except queue.Empty:
-                time.sleep(0.1)
                 continue
             except Exception as e:
                 print(f"Error updating UI: {e}")
+                import traceback
+                traceback.print_exc()
     
     def update_text_widgets(self, original, translated):
-        # 원본 텍스트 업데이트
-        self.original_text.insert(tk.END, original + '\n')
-        self.original_text.see(tk.END)
-        
-        # 번역 텍스트 업데이트
-        self.translated_text.insert(tk.END, translated + '\n')
-        self.translated_text.see(tk.END)
+        try:
+            # 원본 텍스트 업데이트
+            self.original_text.insert(tk.END, original + '\n')
+            self.original_text.see(tk.END)
+            
+            # 번역 텍스트 업데이트
+            self.translated_text.insert(tk.END, translated + '\n')
+            self.translated_text.see(tk.END)
+            
+            # 텍스트 위젯 내용 제한
+            if float(self.original_text.index('end-1c').split('.')[0]) > 1000:
+                self.original_text.delete('1.0', '100.0')
+            if float(self.translated_text.index('end-1c').split('.')[0]) > 1000:
+                self.translated_text.delete('1.0', '100.0')
+            
+            # 화면 갱신 강제
+            self.root.update_idletasks()
+        except Exception as e:
+            print(f"Error in update_text_widgets: {e}")
+            import traceback
+            traceback.print_exc()
 
 if __name__ == "__main__":
     root = tk.Tk()
