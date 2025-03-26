@@ -24,13 +24,13 @@
 - 서비스 계정 생성 및 JSON 키 파일 다운로드
 - 다운로드한 JSON 키 파일을 프로젝트 폴더에 저장
 - JSON 파일 이름을 `key.json`으로 변경하거나 
-  realtime_translator.py 파일에서 환경 변수 설정 부분을 수정
+  config.py 파일에서 환경 변수 설정 부분을 수정
 
 ## 사용 방법
 
 1. 프로그램 실행:
    ```
-   python realtime_translator.py
+   python main.py
    ```
 
 2. "번역 시작" 버튼을 클릭하여 번역을 시작합니다.
