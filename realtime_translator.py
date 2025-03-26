@@ -38,6 +38,12 @@ class RealtimeTranslator:
         self.audio_queue = queue.Queue()
         self.text_queue = queue.Queue()
         
+        # 오디오 입력 장치 목록 가져오기
+        self.input_devices = self.get_input_devices()
+        self.selected_device = tk.StringVar()
+        if self.input_devices:
+            self.selected_device.set(list(self.input_devices.keys())[0])  # 첫 번째 장치 선택
+        
         # 저장할 파일 이름 설정
         self.timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         self.original_file = f"original_text_{self.timestamp}.txt"
@@ -94,6 +100,21 @@ class RealtimeTranslator:
         # 프레임 설정
         main_frame = tk.Frame(self.root, bg="#f0f0f0")
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # 오디오 장치 선택 프레임
+        device_frame = tk.Frame(main_frame, bg="#f0f0f0")
+        device_frame.pack(fill=tk.X, pady=5)
+        
+        tk.Label(device_frame, text="오디오 입력 장치:", bg="#f0f0f0", font=("Arial", 12)).pack(side=tk.LEFT)
+        self.device_combobox = ttk.Combobox(
+            device_frame, 
+            textvariable=self.selected_device,
+            values=list(self.input_devices.keys()),
+            state="readonly",
+            width=30,
+            font=("Arial", 11)
+        )
+        self.device_combobox.pack(side=tk.LEFT, padx=5)
         
         # 상단 컨트롤 프레임
         control_frame = tk.Frame(main_frame, bg="#f0f0f0")
@@ -183,12 +204,16 @@ class RealtimeTranslator:
     def start_recording(self):
         self.is_recording = True
         
+        # 선택된 오디오 장치 인덱스 가져오기
+        device_index = self.input_devices.get(self.selected_device.get(), None)
+        
         # 오디오 스트림 열기
         self.stream = self.audio.open(
             format=self.format,
             channels=self.channels,
             rate=self.rate,
             input=True,
+            input_device_index=device_index,  # 선택된 장치 사용
             frames_per_buffer=self.chunk
         )
         
@@ -329,6 +354,19 @@ class RealtimeTranslator:
             print(f"Error in update_text_widgets: {e}")
             import traceback
             traceback.print_exc()
+
+    def get_input_devices(self):
+        """사용 가능한 오디오 입력 장치 목록을 반환합니다."""
+        devices = {}
+        info = self.audio.get_host_api_info_by_index(0)
+        num_devices = info.get('deviceCount')
+        
+        for i in range(num_devices):
+            device_info = self.audio.get_device_info_by_host_api_device_index(0, i)
+            if device_info.get('maxInputChannels') > 0:  # 입력 장치만 필터링
+                devices[f"{device_info.get('name')}"] = i
+        
+        return devices
 
 if __name__ == "__main__":
     root = tk.Tk()
