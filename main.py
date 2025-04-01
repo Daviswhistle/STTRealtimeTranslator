@@ -261,7 +261,7 @@ class RealtimeTranslatorApp:
              print(f"process_stream: Google API 스트리밍 타임아웃 또는 종료됨: {e}")
              # 사용자에게 알림
              if self.ui and self.root and self.root.winfo_exists():
-                 self.root.after(0, lambda: messagebox.showwarning("연결 종료", "실시간 인식/번역 세션이 종료되었습니다. 다시 시작해주세요."))
+                 self.root.after(0, lambda: tk.messagebox.showwarning("연결 종료", "실시간 인식/번역 세션이 종료되었습니다. 다시 시작해주세요."))
                  # 자동으로 중지 상태로 변경
                  self.root.after(0, self.ui.toggle_recording) # 토글 함수 호출하여 상태 변경
         except Exception as e:
