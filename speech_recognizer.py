@@ -12,7 +12,7 @@ class SpeechRecognizer:
             language_code=self.language_code,
             enable_automatic_punctuation=True,
             # 모델 선택 (선택적, 상황에 따라 다름. 'latest_long' 또는 'telephony' 등)
-            # model='latest_long',
+            model='latest_long',
             # use_enhanced=True, # 향상된 모델 사용 (비용 증가)
         )
         # 스트리밍 설정을 streaming_config로 분리
