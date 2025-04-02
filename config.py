@@ -55,5 +55,5 @@ def get_timestamp():
 
 # 로그 파일 이름 (원본 및 번역 텍스트)
 TIMESTAMP = get_timestamp()
-ORIGINAL_FILE = f"original_text_{TIMESTAMP}.txt"
-TRANSLATED_FILE = f"translated_text_{TIMESTAMP}.txt"
+ORIGINAL_FILE = f"results/original_text_{TIMESTAMP}.txt"
+TRANSLATED_FILE = f"results/translated_text_{TIMESTAMP}.txt"
