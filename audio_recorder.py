@@ -1,4 +1,5 @@
 # audio_recorder.py
+import traceback
 import pyaudio
 import queue
 from config import AUDIO_FORMAT, CHANNELS, RATE, CHUNK
